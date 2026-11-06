@@ -1,0 +1,32 @@
+name: HyInv fixed-position validation
+
+on:
+  push:
+    branches: ['ci/hyinv-insertion-codes-20261106']
+
+permissions:
+  contents: read
+
+jobs:
+  cpu:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install CPU dependencies
+        run: |
+          python -m pip install 'torch==2.6.0' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install numpy safetensors
+      - name: Test fixed positions with bundled weights
+        working-directory: AI4Science/hyinv
+        env:
+          OMP_NUM_THREADS: 2
+          MKL_NUM_THREADS: 2
+        run: python -m unittest discover -s tests -v
